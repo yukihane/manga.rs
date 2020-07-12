@@ -49,14 +49,3 @@ fn convert_to_daily(node: Node) -> Daily {
         .collect();
     Daily { date, titles }
 }
-
-fn hacker_news(url: &str) {
-    let resp = reqwest::blocking::get(url).unwrap();
-    assert!(resp.status().is_success());
-
-    Document::from_read(resp)
-        .unwrap()
-        .find(Name("div"))
-        .filter_map(|n| n.attr("href"))
-        .for_each(|x| println!("{}", x));
-}
