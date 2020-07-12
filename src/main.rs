@@ -3,7 +3,7 @@ use select::document::Document;
 use select::node::Node;
 use select::predicate::{Class, Name};
 use std::error::Error;
-
+use url::Url;
 // impl From<&str> for LocalDate {
 //     fn from(str: &str) -> Self {
 
@@ -13,13 +13,23 @@ use std::error::Error;
 #[derive(Debug)]
 struct Daily {
     date: String,
-    titles: Vec<Title>,
+    titles: Vec<String>,
 }
 
 #[derive(Debug)]
-struct Title {
+struct Work {
+    id: String,
     name: String,
+    url: Url,
+    episodes: Vec<Episode>,
 }
+
+#[derive(Debug)]
+struct Episode {
+    name: String,
+    url: Url,
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let url = "https://pocket.shonenmagazine.com/";
     let resp = reqwest::blocking::get(url)?;
@@ -33,12 +43,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn convert_to_daily(node: Node) -> Daily {
     let date = node.find(Class("date")).map(|n| n.text()).next().unwrap();
-    let titles: Vec<Title> = node
+    let titles: Vec<String> = node
         .find(Class("daily-series-title"))
-        .map(|n| {
-            let title = n.text();
-            Title { name: title }
-        })
+        .map(|n| n.text())
         .collect();
     Daily { date, titles }
 }
