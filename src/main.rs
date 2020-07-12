@@ -10,11 +10,13 @@ use std::error::Error;
 //     }
 // }
 
+#[derive(Debug)]
 struct Daily {
     date: String,
     titles: Vec<Title>,
 }
 
+#[derive(Debug)]
 struct Title {
     name: String,
 }
@@ -23,19 +25,22 @@ fn main() -> Result<(), Box<dyn Error>> {
     let resp = reqwest::blocking::get(url)?;
     let document = Document::from_read(resp).unwrap();
     let daily_series = document.find(Class("daily-series-wrapper"));
-    let dailies: Vec<Daily> = daily_series.filter_map(|n| convert_to_daily(n)).collect();
+    let dailies: Vec<Daily> = daily_series.map(|n| convert_to_daily(n)).collect();
 
+    println!("{:?}", dailies);
     Ok(())
 }
 
-fn convert_to_daily(node: Node) -> Option<Daily> {
-    // println!("{:?}", node);
-    let res = node.find(Class("date"));
-    res.for_each(|x| {
-        let txt = x.first_child().unwrap().as_text();
-        println!("{}", txt.unwrap());
-    });
-    None
+fn convert_to_daily(node: Node) -> Daily {
+    let date = node.find(Class("date")).map(|n| n.text()).next().unwrap();
+    let titles: Vec<Title> = node
+        .find(Class("daily-series-title"))
+        .map(|n| {
+            let title = n.text();
+            Title { name: title }
+        })
+        .collect();
+    Daily { date, titles }
 }
 
 fn hacker_news(url: &str) {
