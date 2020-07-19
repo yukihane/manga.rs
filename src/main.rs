@@ -14,24 +14,26 @@ use url::Url;
 //     }
 // }
 
-#[derive(Debug)]
-struct Daily {
-    date: String,
-    titles: Vec<String>,
-}
-
+/// 作品
 #[derive(Debug)]
 struct Work {
+    /// 作品ID
     id: String,
+    /// 作品タイトル
     name: String,
+    /// 作品URL
     url: String,
+    /// エピソード
     episodes: Vec<Episode>,
 }
 
+/// エピソード
 #[derive(Debug)]
 struct Episode {
+    /// エピソードタイトル
     name: String,
-    url: Url,
+    /// エピソードリンク
+    url: String,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -41,7 +43,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let daily_series_items = document.find(Class("daily-series-item"));
     let works: Vec<Work> = daily_series_items.map(|n| convert_to_work(n)).collect();
 
-    // println!("{:?}", works);
     Ok(())
 }
 
@@ -69,23 +70,25 @@ fn convert_to_work(node: Node) -> Work {
     let rss = reqwest::blocking::get(&rss_url).unwrap();
     let feed = parser::parse(Box::new(rss)).unwrap();
     let title = feed.title.unwrap().content.to_string();
-    println!("title: {}", title);
-    println!("==========");
-    // println!("{:?}", feed);
+    let link = feed.links.iter().next().unwrap().href.clone();
+    let episodes: Vec<Episode> = feed
+        .entries
+        .iter()
+        .map(|f| {
+            let title = &f.title;
+            let title = title.as_ref().unwrap().content.clone();
+            let link = f.links.iter().next().unwrap().href.clone();
+            Episode {
+                name: title,
+                url: link,
+            }
+        })
+        .collect();
 
     Work {
         id,
-        name: "".to_string(),
-        url: "".to_string(),
-        episodes: vec![],
+        name: title,
+        url: link,
+        episodes,
     }
-}
-
-fn convert_to_daily(node: Node) -> Daily {
-    let date = node.find(Class("date")).map(|n| n.text()).next().unwrap();
-    let titles: Vec<String> = node
-        .find(Class("daily-series-title"))
-        .map(|n| n.text())
-        .collect();
-    Daily { date, titles }
 }
