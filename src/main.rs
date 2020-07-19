@@ -36,7 +36,7 @@ struct Episode {
     /// エピソードリンク
     url: String,
     // 更新日時
-    updated: DateTime<Local>,
+    published: DateTime<Local>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -82,11 +82,11 @@ fn convert_to_work(node: Node) -> Work {
             let title = &f.title;
             let title = title.as_ref().unwrap().content.clone();
             let link = f.links.iter().next().unwrap().href.clone();
-            let updated = f.updated.unwrap().with_timezone(&Local);
+            let published = f.published.unwrap().with_timezone(&Local);
             Episode {
                 name: title,
                 url: link,
-                updated,
+                published,
             }
         })
         .collect();
