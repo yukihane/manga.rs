@@ -1,4 +1,5 @@
-use datetime::LocalDate;
+use chrono::DateTime;
+use chrono::Local;
 use feed_rs::parser;
 use percent_encoding::*;
 use regex::Regex;
@@ -6,7 +7,7 @@ use select::document::Document;
 use select::node::Node;
 use select::predicate::{Class, Name};
 use std::error::Error;
-use url::Url;
+// use url::Url;
 
 // impl From<&str> for LocalDate {
 //     fn from(str: &str) -> Self {
@@ -34,6 +35,8 @@ struct Episode {
     name: String,
     /// エピソードリンク
     url: String,
+    // 更新日時
+    updated: DateTime<Local>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -79,9 +82,11 @@ fn convert_to_work(node: Node) -> Work {
             let title = &f.title;
             let title = title.as_ref().unwrap().content.clone();
             let link = f.links.iter().next().unwrap().href.clone();
+            let updated = f.updated.unwrap().with_timezone(&Local);
             Episode {
                 name: title,
                 url: link,
+                updated,
             }
         })
         .collect();
