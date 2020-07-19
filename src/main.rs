@@ -69,7 +69,8 @@ fn convert_to_work(node: Node) -> Work {
 
     let rss = reqwest::blocking::get(&rss_url).unwrap();
     let feed = parser::parse(Box::new(rss)).unwrap();
-    let title = feed.title.unwrap().content.to_string();
+    let title = feed.title.unwrap().content;
+    let title = extract_title(&title);
     let link = feed.links.iter().next().unwrap().href.clone();
     let episodes: Vec<Episode> = feed
         .entries
@@ -91,4 +92,13 @@ fn convert_to_work(node: Node) -> Work {
         url: link,
         episodes,
     }
+}
+
+/// マガポケのタイトルは"マガポケ（思春期ちゃんのしつけかた）"
+/// みたいになっているのでカッコの中を抽出する
+fn extract_title(title: &str) -> String {
+    let pattern = Regex::new(r"マガポケ（(.+)）").unwrap();
+    let m = pattern.captures(title).unwrap();
+    let title = m.get(1).unwrap().as_str();
+    return title.to_string();
 }
